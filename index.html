@@ -3,19 +3,30 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>CFU Strategy Planner</title>
+    <title>QuantificatORE di CFU</title>
     <style>
         :root {
             --bg-color: #121212;
             --card-bg: #1e1e1e;
             --text-main: #e0e0e0;
             --text-dim: #a0a0a0;
-            --accent: #4caf50; /* Verde Matematico */
-            --accent-dim: #2e7d32;
-            --scenario-a: #e57373; /* Rosso Guerra */
-            --scenario-b: #64b5f6; /* Blu Costante */
-            --scenario-c: #ffd54f; /* Giallo Realista */
+            --accent: #4caf50;
+            
+            /* Colori Scenari */
+            --scenario-a: #ef5350; /* Rosso chiaro */
+            --scenario-b: #ffa726; /* Arancio */
+            --scenario-c: #42a5f5; /* Blu */
+            --scenario-d: #66bb6a; /* Verde */
+            
+            --panic: #ff1744; 
             --font-stack: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+
+            /* Palette Colori Esami */
+            --ex-1: #ff4081; /* Rosa */
+            --ex-2: #00bcd4; /* Ciano */
+            --ex-3: #ffc107; /* Giallo */
+            --ex-4: #e040fb; /* Viola */
+            --ex-5: #76ff03; /* Lime */
         }
 
         body {
@@ -30,7 +41,7 @@
         }
 
         .container {
-            max-width: 900px;
+            max-width: 950px; /* Allargato un po' */
             width: 100%;
         }
 
@@ -51,22 +62,42 @@
             margin-bottom: 30px;
         }
 
-        /* INPUT SECTION */
-        .input-group {
+        /* EXAM LIST SECTION */
+        .input-section {
             background: var(--card-bg);
             padding: 20px;
             border-radius: 8px;
             box-shadow: 0 4px 6px rgba(0,0,0,0.3);
-            display: grid;
-            grid-template-columns: 2fr 1fr auto;
-            gap: 15px;
-            align-items: end;
             margin-bottom: 30px;
+        }
+
+        .exam-row {
+            display: grid;
+            grid-template-columns: 30px 2fr 1fr 1fr auto;
+            gap: 10px;
+            align-items: center;
+            margin-bottom: 10px;
+            padding-bottom: 10px;
+            border-bottom: 1px solid #333;
+            animation: fadeIn 0.3s ease;
+        }
+
+        .exam-row:last-of-type {
+            border-bottom: none;
+            margin-bottom: 0;
+            padding-bottom: 0;
+        }
+
+        .color-dot {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            background: #555;
         }
 
         label {
             display: block;
-            font-size: 0.75rem;
+            font-size: 0.70rem;
             text-transform: uppercase;
             letter-spacing: 1px;
             color: var(--text-dim);
@@ -77,36 +108,62 @@
             background: #2c2c2c;
             border: 1px solid #444;
             color: white;
-            padding: 12px;
+            padding: 10px;
             border-radius: 4px;
             width: 100%;
             box-sizing: border-box;
-            font-size: 1rem;
+            font-size: 0.9rem;
             font-family: inherit;
         }
-
-        input:focus {
-            outline: none;
-            border-color: var(--accent);
+        
+        input[type="date"]::-webkit-calendar-picker-indicator {
+            filter: invert(1);
+            cursor: pointer;
         }
 
-        button {
+        .btn-remove {
+            background: transparent;
+            color: #ef5350;
+            border: 1px solid #ef5350;
+            padding: 8px 12px;
+            cursor: pointer;
+            border-radius: 4px;
+            font-size: 0.8rem;
+        }
+
+        .btn-remove:hover { background: rgba(239, 83, 80, 0.1); }
+
+        .controls {
+            margin-top: 20px;
+            display: flex;
+            gap: 15px;
+        }
+
+        .btn-add {
+            background: #333;
+            color: white;
+            border: 1px solid #555;
+            padding: 10px 20px;
+            border-radius: 4px;
+            cursor: pointer;
+            text-transform: uppercase;
+            font-size: 0.8rem;
+            font-weight: 600;
+        }
+
+        .btn-calc {
             background: var(--accent);
             color: white;
             border: none;
-            padding: 12px 25px;
+            padding: 10px 30px;
             border-radius: 4px;
             cursor: pointer;
-            font-weight: 600;
             text-transform: uppercase;
-            letter-spacing: 0.5px;
-            transition: background 0.2s;
-            height: 46px;
+            font-weight: 700;
+            flex-grow: 1;
         }
-
-        button:hover {
-            background: var(--accent-dim);
-        }
+        
+        .btn-calc:hover { background: #45a049; }
 
         /* OUTPUT SECTION */
         #results-area {
@@ -145,7 +202,7 @@
         /* SCENARIOS */
         .scenarios-container {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); /* Responsive */
             gap: 20px;
         }
 
@@ -153,41 +210,61 @@
             background: var(--card-bg);
             border-radius: 8px;
             padding: 20px;
-            border-top: 4px solid;
+            border-top: 5px solid;
             display: flex;
             flex-direction: column;
+            position: relative;
+        }
+        
+        .scenario-card.late {
+            border-color: var(--panic) !important;
+            box-shadow: 0 0 15px rgba(255, 23, 68, 0.15);
         }
 
         .sc-header {
             display: flex;
             justify-content: space-between;
             align-items: center;
-            margin-bottom: 15px;
+            margin-bottom: 10px;
         }
 
         .sc-title {
-            font-weight: 700;
+            font-weight: 800;
             text-transform: uppercase;
-            font-size: 0.9rem;
+            font-size: 0.95rem;
         }
+        
+        .late-badge {
+            background: var(--panic);
+            color: white;
+            font-size: 0.7rem;
+            padding: 3px 8px;
+            border-radius: 4px;
+            font-weight: bold;
+            display: none;
+        }
+        
+        .scenario-card.late .late-badge { display: block; }
 
         .sc-days {
-            font-size: 1.5rem;
-            font-weight: 800;
+            font-size: 1.2rem;
+            font-weight: 700;
+            margin-bottom: 5px;
         }
 
         .sc-desc {
             font-size: 0.85rem;
             color: var(--text-dim);
-            margin-bottom: 15px;
+            margin-bottom: 20px;
             line-height: 1.4;
+            min-height: 40px; /* Align cards */
         }
 
-        /* MINI CALENDAR */
+        /* MINI CALENDAR (INGRANDITO) */
         .mini-calendar {
             display: grid;
-            grid-template-columns: repeat(12, 1fr); /* 12 mesi */
-            gap: 2px;
+            grid-template-columns: repeat(12, 1fr);
+            gap: 4px; /* Aumentato gap */
             margin-top: auto;
             padding-top: 15px;
             border-top: 1px solid #333;
@@ -196,31 +273,27 @@
         .cal-month {
             display: flex;
             flex-direction: column;
-            gap: 1px;
+            gap: 2px; /* Aumentato gap */
         }
 
         .month-label {
-            font-size: 8px;
+            font-size: 9px;
             text-align: center;
             color: var(--text-dim);
-            margin-bottom: 2px;
+            margin-bottom: 4px;
         }
 
         .days-grid {
             display: grid;
-            grid-template-columns: repeat(2, 1fr); /* 2 colonne di giorni per mese per compattezza */
-            gap: 1px;
+            grid-template-columns: repeat(2, 1fr); 
+            gap: 2px; /* Aumentato */
         }
 
         .day-dot {
-            width: 3px;
-            height: 3px;
+            width: 5px; /* Ingrandito da 3px */
+            height: 5px; /* Ingrandito da 3px */
             background-color: #333;
-            border-radius: 50%;
-        }
-
-        .day-active {
-            background-color: currentColor; /* Prende il colore del bordo della card */
+            border-radius: 2px; /* Leggermente quadrato per leggibilità */
         }
 
         @keyframes fadeIn {
@@ -228,28 +301,27 @@
             to { opacity: 1; transform: translateY(0); }
         }
 
-        @media (max-width: 600px) {
-            .input-group { grid-template-columns: 1fr; }
-            .mini-calendar { grid-template-columns: repeat(6, 1fr); gap: 5px; } /* 6 mesi su mobile */
+        @media (max-width: 800px) {
+            .mini-calendar { grid-template-columns: repeat(6, 1fr); gap: 8px; } 
+            .exam-row { grid-template-columns: 1fr; gap: 5px; border-bottom: 2px solid #333; padding-bottom: 15px; margin-bottom: 15px; }
+            .color-dot { display: none; }
         }
     </style>
 </head>
 <body>
 
 <div class="container">
-    <h1>Strategic Study Planner</h1>
-    <div class="subtitle">Calcolo operativo basato su 1 CFU = 25h totali (Ratio Lezione/Studio: 1:2.75)</div>
+    <h1>Quantificat<span style="color:var(--accent)">ORE</span> di CFU</h1>
+    <div class="subtitle">Smetti di pensare ai crediti, inizia a contare i giorni!</div>
 
-    <div class="input-group">
-        <div>
-            <label>Nome Esame(i)</label>
-            <input type="text" id="examName" placeholder="Es. Analisi + Geometria">
+    <div class="input-section">
+        <div id="exams-list">
+            </div>
+        
+        <div class="controls">
+            <button class="btn-add" onclick="addExamRow()">+ Aggiungi Esame</button>
+            <button class="btn-calc" onclick="calculateStrategy()">Calcola Piano</button>
         </div>
-        <div>
-            <label>Totale CFU</label>
-            <input type="number" id="cfuValue" placeholder="12" min="1">
-        </div>
-        <button onclick="calculateStrategy()">Calcola</button>
     </div>
 
     <div id="results-area">
@@ -257,139 +329,270 @@
             <div class="stat-card">
                 <label>Carico Totale</label>
                 <span class="stat-value" id="totalHours">0</span>
-                <span class="stat-sub">Ore complessive (Legge)</span>
+                <span class="stat-sub">Ore complessive</span>
             </div>
             <div class="stat-card" style="border-color: #d32f2f;">
-                <label>Ore "Frontali"</label>
+                <label>Ore di lezione</label>
                 <span class="stat-value" id="lessonHours">0</span>
-                <span class="stat-sub">Lezioni (40 lez x 12CFU)</span>
+                <span class="stat-sub">1 CFU = 6/7 ore di lezione</span>
             </div>
             <div class="stat-card" style="border-color: var(--accent);">
-                <label>Studio Autonomo</label>
+                <label>Studio Netto</label>
                 <span class="stat-value" id="studyHours">0</span>
-                <span class="stat-sub">Ore nette da fare a casa</span>
+                <span class="stat-sub">Ore di studio autonomo</span>
             </div>
         </div>
 
         <div class="scenarios-container">
-            <div class="scenario-card" style="border-color: var(--scenario-a); color: var(--scenario-a);">
+            <div class="scenario-card" id="cardA" style="border-color: var(--scenario-a); color: var(--scenario-a);">
                 <div class="sc-header">
-                    <span class="sc-title">Scenario A: Guerra</span>
+                    <span class="sc-title">Scenario A: Stakanovista</span>
+                    <span class="late-badge">RITARDO!</span>
                 </div>
-                <div class="sc-days"><span id="daysA">0</span> Giorni</div>
-                <div class="sc-desc">Ritmo: <strong>8 ore/die</strong>.<br>Sessione intensiva. Modalità disperata. Deep work assoluto.</div>
+                <div class="sc-days">8 ore/giorno</div>
+                <div class="sc-desc" id="descA">...</div>
                 <div class="mini-calendar" id="calA"></div>
             </div>
 
-            <div class="scenario-card" style="border-color: var(--scenario-b); color: var(--scenario-b);">
+            <div class="scenario-card" id="cardB" style="border-color: var(--scenario-b); color: var(--scenario-b);">
                 <div class="sc-header">
-                    <span class="sc-title">Scenario B: Costante</span>
+                    <span class="sc-title">Scenario B: Standard</span>
+                    <span class="late-badge">RITARDO!</span>
                 </div>
-                <div class="sc-days"><span id="daysB">0</span> Giorni</div>
-                <div class="sc-desc">Ritmo: <strong>4 ore/die</strong>.<br>Sostenibile a lungo termine. Lascia spazio al riposo.</div>
+                <div class="sc-days">6 ore/giorno</div>
+                <div class="sc-desc" id="descB">...</div>
                 <div class="mini-calendar" id="calB"></div>
             </div>
 
-            <div class="scenario-card" style="border-color: var(--scenario-c); color: var(--scenario-c);">
+            <div class="scenario-card" id="cardC" style="border-color: var(--scenario-c); color: var(--scenario-c);">
                 <div class="sc-header">
-                    <span class="sc-title">Scenario C: Realista</span>
+                    <span class="sc-title">Scenario C: Part-Time</span>
+                    <span class="late-badge">RITARDO!</span>
                 </div>
-                <div class="sc-days"><span id="daysC">0</span> Giorni</div>
-                <div class="sc-desc">Ritmo: <strong>2.5 ore/die</strong>.<br>Giornate "no", imprevisti, o studio parallelo ad altro.</div>
+                <div class="sc-days">4 ore/giorno</div>
+                <div class="sc-desc" id="descC">...</div>
                 <div class="mini-calendar" id="calC"></div>
+            </div>
+
+            <div class="scenario-card" id="cardD" style="border-color: var(--scenario-d); color: var(--scenario-d);">
+                <div class="sc-header">
+                    <span class="sc-title">Scenario D: Chill</span>
+                    <span class="late-badge">RITARDO!</span>
+                </div>
+                <div class="sc-days">2.5 ore/giorno</div>
+                <div class="sc-desc" id="descD">...</div>
+                <div class="mini-calendar" id="calD"></div>
             </div>
         </div>
     </div>
 </div>
 
 <script>
+    // Palette colori per gli esami
+    const colors = ['var(--ex-1)', 'var(--ex-2)', 'var(--ex-3)', 'var(--ex-4)', 'var(--ex-5)'];
+    let examCount = 0;
+
+    // Inizializza con una riga vuota
+    window.onload = function() {
+        addExamRow();
+    };
+
+    function addExamRow() {
+        const list = document.getElementById('exams-list');
+        const div = document.createElement('div');
+        div.className = 'exam-row';
+        
+        const colorVar = colors[examCount % colors.length];
+        
+        div.innerHTML = `
+            <div class="color-dot" style="background-color: ${colorVar}"></div>
+            <div>
+                <label>Esame</label>
+                <input type="text" class="ex-name" placeholder="Nome esame" style="border-left: 3px solid ${colorVar}">
+            </div>
+            <div>
+                <label>CFU</label>
+                <input type="number" class="ex-cfu" placeholder="0" min="1">
+            </div>
+            <div>
+                <label>Data Appello</label>
+                <input type="date" class="ex-date">
+            </div>
+            <div>
+                <label>&nbsp;</label>
+                <button class="btn-remove" onclick="removeRow(this)">X</button>
+            </div>
+        `;
+        list.appendChild(div);
+        examCount++;
+    }
+
+    function removeRow(btn) {
+        const row = btn.closest('.exam-row');
+        // Non rimuovere l'unica riga rimasta
+        if (document.querySelectorAll('.exam-row').length > 1) {
+            row.remove();
+        } else {
+            // Se è l'ultima, pulisci i campi invece di rimuovere
+            row.querySelector('.ex-name').value = '';
+            row.querySelector('.ex-cfu').value = '';
+            row.querySelector('.ex-date').value = '';
+        }
+    }
+
     function calculateStrategy() {
-        const cfu = parseFloat(document.getElementById('cfuValue').value);
-        if (!cfu || cfu <= 0) {
-            alert("Inserisci un numero di CFU valido.");
+        // 1. Raccogli dati
+        const rows = document.querySelectorAll('.exam-row');
+        let totalCfu = 0;
+        let examsData = [];
+
+        rows.forEach((row, index) => {
+            const cfu = parseFloat(row.querySelector('.ex-cfu').value);
+            const dateStr = row.querySelector('.ex-date').value;
+            const name = row.querySelector('.ex-name').value || `Esame ${index+1}`;
+            
+            // Colore associato (ricalcolato per sicurezza)
+            const color = colors[index % colors.length];
+
+            if (cfu && cfu > 0) {
+                totalCfu += cfu;
+                examsData.push({
+                    name: name,
+                    cfu: cfu,
+                    date: dateStr ? new Date(dateStr) : null,
+                    color: color
+                });
+            }
+        });
+
+        if (examsData.length === 0) {
+            alert("Inserisci almeno un esame con CFU validi.");
             return;
         }
 
-        // 1. Math Logic (Mentor's Logic)
+        // 2. Statistiche Globali
         const HOURS_PER_CFU = 25;
-        const totalHours = cfu * HOURS_PER_CFU;
-        
-        // Ratio: 12 CFU = 80 hours lesson. 
-        // Factor = 80/12 = 6.6667 hours lesson per CFU.
-        const lessonHoursPerCfu = 80 / 12;
-        const lessonHours = Math.round(cfu * lessonHoursPerCfu);
-        
+        const totalHours = totalCfu * HOURS_PER_CFU;
+        const lessonHours = Math.round(totalCfu * (80/12));
         const studyHours = totalHours - lessonHours;
 
-        // 2. Update Stats
         document.getElementById('totalHours').innerText = totalHours;
         document.getElementById('lessonHours').innerText = lessonHours;
         document.getElementById('studyHours').innerText = studyHours;
 
-        // 3. Calculate Scenarios (Days needed)
-        // Scenario A: 8h/day
-        const daysA = Math.ceil(studyHours / 8);
-        // Scenario B: 4h/day
-        const daysB = Math.ceil(studyHours / 4);
-        // Scenario C: 2.5h/day
-        const daysC = Math.ceil(studyHours / 2.5);
+        // 3. Calcolo Scenari
+        // A=8h, B=6h, C=4h, D=2.5h
+        const scenarios = [
+            { id: 'A', hours: 8 },
+            { id: 'B', hours: 6 },
+            { id: 'C', hours: 4 },
+            { id: 'D', hours: 2.5 }
+        ];
 
-        document.getElementById('daysA').innerText = daysA;
-        document.getElementById('daysB').innerText = daysB;
-        document.getElementById('daysC').innerText = daysC;
+        const today = new Date();
+        today.setHours(0,0,0,0);
 
-        // 4. Draw Calendars
-        drawCalendar('calA', daysA);
-        drawCalendar('calB', daysB);
-        drawCalendar('calC', daysC);
+        scenarios.forEach(sc => {
+            let totalDaysNeeded = 0;
+            let scenarioBlocks = []; // Conterrà {start, end, color} per ogni esame
+            let isScenarioLate = false;
+
+            // Per ogni esame, calcoliamo il suo blocco in questo scenario
+            examsData.forEach(exam => {
+                const exTotalH = exam.cfu * HOURS_PER_CFU;
+                const exLessonH = Math.round(exam.cfu * (80/12));
+                const exNetH = exTotalH - exLessonH;
+                const exDays = Math.ceil(exNetH / sc.hours);
+                totalDaysNeeded += exDays;
+
+                let start, end;
+
+                if (exam.date) {
+                    // Reverse scheduling: Ho la data, torno indietro
+                    exam.date.setHours(0,0,0,0);
+                    end = new Date(exam.date);
+                    start = new Date(end);
+                    start.setDate(end.getDate() - exDays);
+
+                    if (start < today) isScenarioLate = true;
+                } else {
+                    // Forward scheduling: Parto da oggi (o dalla fine dell'esame precedente se volessimo accodarli, 
+                    // ma qui li facciamo partire tutti oggi per vedere la sovrapposizione o scegliamo oggi)
+                    start = new Date(today);
+                    end = new Date(today);
+                    end.setDate(today.getDate() + exDays);
+                }
+
+                scenarioBlocks.push({
+                    start: start,
+                    end: end,
+                    color: exam.color
+                });
+            });
+
+            // Update UI
+            const card = document.getElementById('card' + sc.id);
+            const desc = document.getElementById('desc' + sc.id);
+            
+            card.classList.remove('late');
+            
+            if (isScenarioLate) {
+                card.classList.add('late');
+                desc.innerHTML = `⚠️ Con questo ritmo sei in ritardo su uno o più esami!`;
+            } else {
+                desc.innerHTML = `Totale giorni di studio: <strong>${totalDaysNeeded}</strong>`;
+            }
+
+            drawCalendar('cal' + sc.id, scenarioBlocks, today);
+        });
 
         document.getElementById('results-area').style.display = 'block';
     }
 
-    function drawCalendar(elementId, durationDays) {
+    function drawCalendar(elementId, blocks, today) {
         const container = document.getElementById(elementId);
         container.innerHTML = '';
         
-        const today = new Date();
-        const endDate = new Date();
-        endDate.setDate(today.getDate() + durationDays);
-
-        // Generate next 12 months roughly
         const months = ['Gen', 'Feb', 'Mar', 'Apr', 'Mag', 'Giu', 'Lug', 'Ago', 'Set', 'Ott', 'Nov', 'Dic'];
+        
         let currentMonthIdx = today.getMonth();
+        let currentYear = today.getFullYear();
 
+        // Disegna 12 mesi
         for (let i = 0; i < 12; i++) {
             let mIdx = (currentMonthIdx + i) % 12;
+            let yearOffset = Math.floor((currentMonthIdx + i) / 12);
+            let displayYear = currentYear + yearOffset;
+
             let monthDiv = document.createElement('div');
             monthDiv.className = 'cal-month';
             
-            // Label
             let label = document.createElement('div');
             label.className = 'month-label';
             label.innerText = months[mIdx];
             monthDiv.appendChild(label);
 
-            // Dots grid (simplified: 30 dots per month approx)
             let dotsGrid = document.createElement('div');
             dotsGrid.className = 'days-grid';
 
-            // Check if this month is in the range
-            // This is a visual approximation for minimalism
-            let yearOffset = Math.floor((currentMonthIdx + i) / 12);
-            let checkDateStart = new Date(today.getFullYear() + yearOffset, mIdx, 1);
-            let checkDateEnd = new Date(today.getFullYear() + yearOffset, mIdx + 1, 0);
-
-            // Draw roughly 20 dots to represent the month visually
-            for(let d=0; d<14; d++) {
+            let daysInMonth = new Date(displayYear, mIdx + 1, 0).getDate();
+            let dotsCount = 14; 
+            
+            for(let d=0; d<dotsCount; d++) {
                 let dot = document.createElement('div');
                 dot.className = 'day-dot';
                 
-                // Logic to color dots:
-                // We calculate if the "study period" covers this relative portion of time
-                let daysFromStart = (i * 30) + (d * 2); // rough day approximation
+                let dayEstimate = Math.floor((d / dotsCount) * daysInMonth) + 1;
+                let dotDate = new Date(displayYear, mIdx, dayEstimate);
                 
-                if (daysFromStart < durationDays) {
-                    dot.classList.add('day-active');
+                // Cerca se questo giorno cade in uno dei blocchi esame
+                // Priorità all'ultimo blocco inserito in caso di sovrapposizione visiva
+                let activeBlock = blocks.find(b => dotDate >= b.start && dotDate <= b.end);
+
+                if (activeBlock) {
+                    dot.style.backgroundColor = activeBlock.color;
+                    // Tocco estetico: un po' di glow
+                    dot.style.boxShadow = `0 0 2px ${activeBlock.color}`;
                 }
                 
                 dotsGrid.appendChild(dot);
