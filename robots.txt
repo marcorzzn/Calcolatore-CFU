@@ -1,0 +1,3 @@
+User-agent: *
+Allow: /
+Sitemap: https://marcorzzn.github.io/QuantificatOREdiCFU/sitemap.xml
